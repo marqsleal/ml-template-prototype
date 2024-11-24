@@ -42,10 +42,7 @@ PARAM_GRID_XGB = {
 PARAM_GRID_ADABOOST = {
     'n_estimators': [50, 100, 200],
     'learning_rate': [0.01, 0.1, 0.5, 1],
-    'base_estimator': [
-        DecisionTreeClassifier(max_depth=1),
-        DecisionTreeClassifier(max_depth=3)
-    ]
+    'base_estimator': ['algorithm', 'estimator', 'learning_rate', 'n_estimators', 'random_state']
 }
 
 PARAM_GRID_GRADIENTBOOST = {
