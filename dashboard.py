@@ -6,16 +6,11 @@ import pandas as pd
 import os
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix, ConfusionMatrixDisplay, classification_report
 
-import model_functions as ModelFunctions
+import functions.model_functions as ModelFunctions
 
-DATA_PATH = "datasets"
-MODEL_PATH = ""
-
-DATA_NAME = ""
-MODEL_NAME = ""
-
-MODEL = os.path.join(DATA_PATH, DATA_NAME)
-DATASET = os.path.join(MODEL_PATH, MODEL_NAME)
+DATASET = "datasets/dataset_nome.csv"
+MODEL = "mlflow/mlartifacts/id_experimento/id_modelo/artifacts/model"
+TARGET = "target"
 
 @st.cache_resource 
 def load_model():
@@ -102,9 +97,9 @@ def class_report_train(y_train, y_pred_train):
 def main():
     df = pd.read_csv(DATASET)
 
-    X_train, X_test, y_train, y_test = ModelFunctions.model_train_test(df, 'target')
+    X_train, X_test, y_train, y_test = ModelFunctions.model_train_test(df, TARGET)
 
-    X_train_processed, X_test_processed = ModelFunctions.model_pre_process(df, 'target', X_train, X_test)
+    X_train_processed, X_test_processed = ModelFunctions.model_pre_process(df, TARGET, X_train, X_test)
 
     model = load_model()
 

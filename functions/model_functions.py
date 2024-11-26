@@ -8,8 +8,12 @@ from sklearn.preprocessing import RobustScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline 
 from sklearn.compose import ColumnTransformer
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 from skopt import BayesSearchCV
+from requests.adapters import HTTPAdapter
+from requests.sessions import Session
 
 PARAM_GRID_RF = {
     'n_estimators': [10, 50, 100],
@@ -41,8 +45,7 @@ PARAM_GRID_XGB = {
 
 PARAM_GRID_ADABOOST = {
     'n_estimators': [50, 100, 200],
-    'learning_rate': [0.01, 0.1, 0.5, 1],
-    'base_estimator': ['algorithm', 'estimator', 'learning_rate', 'n_estimators', 'random_state']
+    'learning_rate': [0.01, 0.1, 1, 10],
 }
 
 PARAM_GRID_GRADIENTBOOST = {
