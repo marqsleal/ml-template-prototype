@@ -77,6 +77,40 @@ PARAM_GRID_HIERARCHICAL = {
 }
 
 def model_train_test(df: pd.DataFrame, target: str, test_size=0.3, random_state=42) -> list:
+    """
+    Divide os dados em conjuntos de treino e teste para modelagem.
+
+    Esta função separa um DataFrame em variáveis preditoras (X) e a variável 
+    alvo (y), e então realiza a divisão desses dados em conjuntos de treino 
+    e teste usando o método `train_test_split` do Scikit-learn.
+
+    Parâmetros:
+    -----------
+    df : pd.DataFrame
+        O DataFrame contendo os dados de entrada.
+    target : str
+        O nome da coluna que representa a variável alvo (y).
+    test_size : float, opcional, padrão=0.3
+        A proporção do conjunto de dados que será usado como teste. 
+        Deve ser um valor entre 0 e 1.
+    random_state : int, opcional, padrão=42
+        Define o estado aleatório para garantir reprodutibilidade nos
+        resultados da divisão.
+
+    Retorna:
+    --------
+    list
+        Uma lista contendo quatro elementos:
+        - X_train: pd.DataFrame
+          Conjunto de treino das variáveis preditoras.
+        - X_test: pd.DataFrame
+          Conjunto de teste das variáveis preditoras.
+        - y_train: pd.Series
+          Conjunto de treino da variável alvo.
+        - y_test: pd.Series
+          Conjunto de teste da variável alvo.
+    """
+
     X, y = df.drop(columns=target), df[target]
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -88,6 +122,35 @@ def model_train_test(df: pd.DataFrame, target: str, test_size=0.3, random_state=
     return X_train, X_test, y_train, y_test
 
 def model_pre_process(df: pd.DataFrame, target: str, X_train: pd.DataFrame, X_test: pd.DataFrame) -> list:
+    """
+    Preprocessa os dados de treino e teste para modelagem.
+
+    Esta função aplica transformações nos dados categóricos e numéricos, 
+    incluindo codificação one-hot para variáveis categóricas e escalonamento 
+    robusto para variáveis numéricas. Os dados transformados são retornados 
+    prontos para serem usados em modelos de machine learning.
+
+    Parâmetros:
+    -----------
+    df : pd.DataFrame
+        O DataFrame original contendo os dados.
+    target : str
+        O nome da coluna que representa a variável alvo.
+    X_train : pd.DataFrame
+        Conjunto de treino das variáveis preditoras.
+    X_test : pd.DataFrame
+        Conjunto de teste das variáveis preditoras.
+
+    Retorna:
+    --------
+    list
+        Uma lista contendo dois elementos:
+        - X_train_processed: np.ndarray
+          Conjunto de treino preprocessado.
+        - X_test_processed: np.ndarray
+          Conjunto de teste preprocessado.
+    """
+
     df = df.drop(columns=target).copy()
 
     numerical_features = df.select_dtypes(include=[np.number]).columns.tolist()
@@ -119,11 +182,69 @@ def model_pre_process(df: pd.DataFrame, target: str, X_train: pd.DataFrame, X_te
 
 
 def mlflow_up(experiment: str, url='http://127.0.0.1:5000') -> None:
+    """
+    Configura o ambiente para rastreamento de experimentos com MLflow.
+
+    Esta função define a URI de rastreamento do MLflow, configura o nome do experimento 
+    e habilita a autologging para modelos Scikit-learn, permitindo o registro automático 
+    de métricas, parâmetros e artefatos.
+
+    Parâmetros:
+    -----------
+    experiment : str
+        O nome do experimento a ser configurado no MLflow.
+    url : str, opcional, padrão='http://127.0.0.1:5000'
+        A URI de rastreamento do servidor MLflow.
+
+    Retorna:
+    --------
+    None
+        Esta função não retorna nenhum valor.
+    """
+
     mlflow.set_tracking_uri(url)
     mlflow.set_experiment(experiment)
     mlflow.sklearn.autolog(silent=True)
 
 def supervised_rand_search_cv(model, param_grid, X_train, X_test, y_train, y_test, cv=5, n_jobs=-1, verbose=1) -> list:
+    """
+    Realiza uma busca aleatória de hiperparâmetros em um modelo supervisionado com registro no MLflow.
+
+    Esta função utiliza `RandomizedSearchCV` para encontrar os melhores hiperparâmetros para o modelo 
+    fornecido, com base nos dados de treino e validação cruzada. Durante o processo, métricas e 
+    parâmetros são registrados no MLflow para rastreamento de experimentos.
+
+    Parâmetros:
+    -----------
+    model : object
+        O modelo de machine learning a ser ajustado.
+    param_grid : dict
+        O espaço de busca para os hiperparâmetros.
+    X_train : array-like ou pd.DataFrame
+        Dados de treino das variáveis preditoras.
+    X_test : array-like ou pd.DataFrame
+        Dados de teste das variáveis preditoras.
+    y_train : array-like ou pd.Series
+        Variável alvo para treino.
+    y_test : array-like ou pd.Series
+        Variável alvo para teste.
+    cv : int, opcional, padrão=5
+        Número de divisões para validação cruzada.
+    n_jobs : int, opcional, padrão=-1
+        Número de threads para execução paralela. Use -1 para utilizar todos os processadores disponíveis.
+    verbose : int, opcional, padrão=1
+        Nível de detalhamento do log durante a execução da busca.
+
+    Retorna:
+    --------
+    list
+        Uma lista contendo:
+        - run_id: str
+          O ID da execução registrada no MLflow.
+        - best_model: object
+          O melhor estimador obtido pela busca aleatória.
+    """
+
     with mlflow.start_run(run_name=f'Supervised_RandomSearchCV_{model.__class__.__name__}') as run:
         run_id = run.info.run_id
 
@@ -150,6 +271,44 @@ def supervised_rand_search_cv(model, param_grid, X_train, X_test, y_train, y_tes
         return run_id, best_model
 
 def supervised_grid_search_cv(model, param_grid, X_train, X_test, y_train, y_test, cv=5, n_jobs=-1, verbose=1) -> list:
+    """
+    Realiza uma busca exaustiva de hiperparâmetros em um modelo supervisionado com registro no MLflow.
+
+    Esta função utiliza `GridSearchCV` para testar todas as combinações possíveis de 
+    hiperparâmetros fornecidas no `param_grid`, com base nos dados de treino e validação cruzada. 
+    Durante o processo, métricas e parâmetros são registrados no MLflow para rastreamento de experimentos.
+
+    Parâmetros:
+    -----------
+    model : object
+        O modelo de machine learning a ser ajustado.
+    param_grid : dict
+        O espaço de busca contendo todas as combinações possíveis de hiperparâmetros.
+    X_train : array-like ou pd.DataFrame
+        Dados de treino das variáveis preditoras.
+    X_test : array-like ou pd.DataFrame
+        Dados de teste das variáveis preditoras.
+    y_train : array-like ou pd.Series
+        Variável alvo para treino.
+    y_test : array-like ou pd.Series
+        Variável alvo para teste.
+    cv : int, opcional, padrão=5
+        Número de divisões para validação cruzada.
+    n_jobs : int, opcional, padrão=-1
+        Número de threads para execução paralela. Use -1 para utilizar todos os processadores disponíveis.
+    verbose : int, opcional, padrão=1
+        Nível de detalhamento do log durante a execução da busca.
+
+    Retorna:
+    --------
+    list
+        Uma lista contendo:
+        - run_id: str
+          O ID da execução registrada no MLflow.
+        - best_model: object
+          O melhor estimador obtido pela busca exaustiva.
+    """
+
     with mlflow.start_run(run_name=f'Supervised_GridSearchCV{model.__class__.__name__}') as run:
         run_id = run.info.run_id
 
@@ -176,6 +335,26 @@ def supervised_grid_search_cv(model, param_grid, X_train, X_test, y_train, y_tes
         return run_id, best_model
 
 def supervised_bayesian_search_cv(model, param_grid, X_train, X_test, y_train, y_test, cv=5, n_jobs=-1, verbose=1) -> list:
+    """
+    Configura o ambiente para rastreamento de experimentos com MLflow.
+
+    Esta função define a URI de rastreamento do MLflow, configura o nome do experimento 
+    e habilita a autologging para modelos Scikit-learn, permitindo o registro automático 
+    de métricas, parâmetros e artefatos.
+
+    Parâmetros:
+    -----------
+    experiment : str
+        O nome do experimento a ser configurado no MLflow.
+    url : str, opcional, padrão='http://127.0.0.1:5000'
+        A URI de rastreamento do servidor MLflow.
+
+    Retorna:
+    --------
+    None
+        Esta função não retorna nenhum valor.
+    """
+
     with mlflow.start_run(run_name=f'Supervised_BayesSearchCV{model.__class__.__name__}') as run:
         run_id = run.info.run_id
 
@@ -202,6 +381,38 @@ def supervised_bayesian_search_cv(model, param_grid, X_train, X_test, y_train, y
         return run_id, best_model
 
 def unsupervised_rand_search_cv(model, param_grid, X_train, cv=5, n_jobs=-1, verbose=1) -> list:
+    """
+    Realiza uma busca aleatória de hiperparâmetros em um modelo não supervisionado com registro no MLflow.
+
+    Esta função utiliza `RandomizedSearchCV` para encontrar os melhores hiperparâmetros para o modelo 
+    fornecido, com base nos dados de treino e validação cruzada. Durante o processo, os parâmetros 
+    otimizados são registrados no MLflow para rastreamento de experimentos.
+
+    Parâmetros:
+    -----------
+    model : object
+        O modelo de aprendizado não supervisionado a ser ajustado.
+    param_grid : dict
+        O espaço de busca para os hiperparâmetros.
+    X_train : array-like ou pd.DataFrame
+        Dados de treino das variáveis preditoras.
+    cv : int, opcional, padrão=5
+        Número de divisões para validação cruzada.
+    n_jobs : int, opcional, padrão=-1
+        Número de threads para execução paralela. Use -1 para utilizar todos os processadores disponíveis.
+    verbose : int, opcional, padrão=1
+        Nível de detalhamento do log durante a execução da busca.
+
+    Retorna:
+    --------
+    list
+        Uma lista contendo:
+        - run_id: str
+          O ID da execução registrada no MLflow.
+        - best_model: object
+          O melhor estimador obtido pela busca aleatória.
+    """
+
     with mlflow.start_run(run_name=f'Unsupervised_RandomSearchCV_{model.__class__.__name__}') as run:
         run_id = run.info.run_id
 
@@ -223,6 +434,38 @@ def unsupervised_rand_search_cv(model, param_grid, X_train, cv=5, n_jobs=-1, ver
         return run_id, best_model
 
 def unsupervised_grid_search_cv(model, param_grid, X_train, cv=5, n_jobs=-1, verbose=1) -> list:
+    """
+    Realiza uma busca exaustiva de hiperparâmetros em um modelo não supervisionado com registro no MLflow.
+
+    Esta função utiliza `GridSearchCV` para testar todas as combinações possíveis de 
+    hiperparâmetros fornecidas no `param_grid`, com base nos dados de treino e validação cruzada. 
+    Durante o processo, os parâmetros otimizados são registrados no MLflow para rastreamento de experimentos.
+
+    Parâmetros:
+    -----------
+    model : object
+        O modelo de aprendizado não supervisionado a ser ajustado.
+    param_grid : dict
+        O espaço de busca contendo todas as combinações possíveis de hiperparâmetros.
+    X_train : array-like ou pd.DataFrame
+        Dados de treino das variáveis preditoras.
+    cv : int, opcional, padrão=5
+        Número de divisões para validação cruzada.
+    n_jobs : int, opcional, padrão=-1
+        Número de threads para execução paralela. Use -1 para utilizar todos os processadores disponíveis.
+    verbose : int, opcional, padrão=1
+        Nível de detalhamento do log durante a execução da busca.
+
+    Retorna:
+    --------
+    list
+        Uma lista contendo:
+        - run_id: str
+          O ID da execução registrada no MLflow.
+        - best_model: object
+          O melhor estimador obtido pela busca exaustiva.
+    """
+
     with mlflow.start_run(run_name=f'Unsupervised_GridSearchCV{model.__class__.__name__}') as run:
         run_id = run.info.run_id
 
@@ -245,6 +488,38 @@ def unsupervised_grid_search_cv(model, param_grid, X_train, cv=5, n_jobs=-1, ver
         return run_id, best_model
 
 def unsupervised_bayesian_search_cv(model, param_grid, X_train, cv=5, n_jobs=-1, verbose=1) -> list:
+    """
+    Realiza uma busca Bayesiana de hiperparâmetros em um modelo não supervisionado com registro no MLflow.
+
+    Esta função utiliza `BayesSearchCV` para otimizar os hiperparâmetros do modelo fornecido, 
+    com base nos dados de treino e validação cruzada. Durante o processo, os parâmetros 
+    otimizados são registrados no MLflow para rastreamento de experimentos.
+
+    Parâmetros:
+    -----------
+    model : object
+        O modelo de aprendizado não supervisionado a ser ajustado.
+    param_grid : dict
+        O espaço de busca para os hiperparâmetros.
+    X_train : array-like ou pd.DataFrame
+        Dados de treino das variáveis preditoras.
+    cv : int, opcional, padrão=5
+        Número de divisões para validação cruzada.
+    n_jobs : int, opcional, padrão=-1
+        Número de threads para execução paralela. Use -1 para utilizar todos os processadores disponíveis.
+    verbose : int, opcional, padrão=1
+        Nível de detalhamento do log durante a execução da busca.
+
+    Retorna:
+    --------
+    list
+        Uma lista contendo:
+        - run_id: str
+          O ID da execução registrada no MLflow.
+        - best_model: object
+          O melhor estimador obtido pela busca Bayesiana.
+    """
+    
     with mlflow.start_run(run_name=f'Unsupervised_BayesSearchCV{model.__class__.__name__}') as run:
         run_id = run.info.run_id
         

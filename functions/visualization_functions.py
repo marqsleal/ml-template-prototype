@@ -19,6 +19,31 @@ EDGE = 'black'
 DPI = 120
 
 def qnt_obs_per_class(df: pd.DataFrame, title: str, target_column: str, labels_df: list[str]):
+    """
+    Plota um gráfico de barras mostrando a quantidade de observações por classe em uma coluna alvo.
+
+    A função gera um gráfico de barras que visualiza a distribuição de classes na coluna `target_column` 
+    de um DataFrame. Além disso, exibe o número de observações para cada classe no gráfico, com os rótulos 
+    personalizados de acordo com a lista `labels_df`. O gráfico é estilizado com a configuração do Seaborn 
+    e apresenta as contagens das observações por classe.
+
+    Parâmetros:
+    -----------
+    df : pd.DataFrame
+        O DataFrame contendo os dados.
+    title : str
+        O título do gráfico, que será exibido acima do gráfico.
+    target_column : str
+        O nome da coluna alvo que contém as classes a serem contadas.
+    labels_df : list of str
+        Lista contendo os rótulos das classes a serem exibidos no eixo X.
+
+    Retorna:
+    --------
+    None
+        A função gera e exibe o gráfico, mas não retorna nenhum valor.
+    """
+
     sns.set_context('paper')
     sns.set_style('white')
 
@@ -38,6 +63,33 @@ def qnt_obs_per_class(df: pd.DataFrame, title: str, target_column: str, labels_d
     plt.show()
 
 def cont_features_mean_per_target_class(df: pd.DataFrame, title: str, continum_columns: list[str],target_column: str, labels_df: list[str]):
+    """
+    Plota gráficos de barras das médias das variáveis contínuas para cada classe da coluna alvo.
+
+    A função gera gráficos de barras mostrando a média das variáveis contínuas listadas em `continum_columns`, 
+    agrupadas por classes da coluna `target_column`. Para cada variável contínua, será gerado um gráfico individual 
+    que exibe a média da variável para cada classe. O gráfico é estilizado com o Seaborn e apresenta as médias 
+    das observações por classe.
+
+    Parâmetros:
+    -----------
+    df : pd.DataFrame
+        O DataFrame contendo os dados.
+    title : str
+        O título geral do gráfico, que será exibido acima do gráfico.
+    continum_columns : list of str
+        Lista contendo os nomes das colunas contínuas cujas médias serão plotadas.
+    target_column : str
+        O nome da coluna alvo (classe) pela qual as médias das variáveis contínuas serão agrupadas.
+    labels_df : list of str
+        Lista contendo os rótulos das classes a serem exibidos no eixo X de cada gráfico.
+
+    Retorna:
+    --------
+    None
+        A função gera e exibe o gráfico, mas não retorna nenhum valor.
+    """
+
     plt.figure(figsize = (12, 12))
     plt.suptitle('Estatísticas de médias das features contínuas por classes ', y=1.02, fontsize=16)
     plt.figtext(0.5, 0.99, f'{title} - {target_column}', ha='center', fontsize=10, color=COLOR)
@@ -57,6 +109,32 @@ def cont_features_mean_per_target_class(df: pd.DataFrame, title: str, continum_c
     plt.show()
 
 def dist_cont_per_target_class(df: pd.DataFrame, title: str, continum_columns: list[str], target_column: str, labels_df: list[str]):
+    """
+    Plota histogramas das distribuições das variáveis contínuas para cada classe da coluna alvo.
+
+    A função gera gráficos de distribuição (histogramas com estimativa de densidade) para cada variável contínua 
+    listada em `continum_columns`, separadas por classe da coluna `target_column`. Para cada variável contínua, 
+    o gráfico exibe a distribuição dos dados para as classes da coluna alvo. O gráfico utiliza o Seaborn para visualização.
+
+    Parâmetros:
+    -----------
+    df : pd.DataFrame
+        O DataFrame contendo os dados.
+    title : str
+        O título geral do gráfico, que será exibido acima de cada gráfico.
+    continum_columns : list of str
+        Lista contendo os nomes das colunas contínuas para as quais as distribuições serão plotadas.
+    target_column : str
+        O nome da coluna alvo (classe) pela qual as distribuições das variáveis contínuas serão agrupadas.
+    labels_df : list of str
+        Lista contendo os rótulos das classes a serem exibidos na legenda.
+
+    Retorna:
+    --------
+    None
+        A função gera e exibe os gráficos, mas não retorna nenhum valor.
+    """
+
     n_subplots = len(continum_columns)
 
     fig, ax = plt.subplots(1, n_subplots, figsize=(4 * n_subplots, 4))
@@ -89,6 +167,28 @@ def dist_cont_per_target_class(df: pd.DataFrame, title: str, continum_columns: l
     plt.show()
 
 def correlation_plot(df: pd.DataFrame, methods: list[str]):
+    """
+    Plota matrizes de correlação para diferentes métodos de correlação.
+
+    A função gera gráficos de calor (heatmaps) mostrando as matrizes de correlação das variáveis numéricas do DataFrame `df`, 
+    utilizando diferentes métodos especificados em `methods`. Cada método de correlação será utilizado para calcular uma 
+    matriz de correlação e um gráfico de calor será exibido. O gráfico exibe os coeficientes de correlação com anotações 
+    e uma máscara para exibir apenas a parte superior da matriz.
+
+    Parâmetros:
+    -----------
+    df : pd.DataFrame
+        O DataFrame contendo as variáveis numéricas para o cálculo da correlação.
+    methods : list of str
+        Lista de métodos de correlação a serem utilizados. Cada método será passado para a função `corr` do Pandas. 
+        Exemplos comuns incluem 'pearson', 'kendall', 'spearman'.
+
+    Retorna:
+    --------
+    None
+        A função gera e exibe os gráficos, mas não retorna nenhum valor.
+    """
+
     for method in methods:
         correlation_matrix = df.corr(method=method)
         
@@ -112,6 +212,25 @@ def correlation_plot(df: pd.DataFrame, methods: list[str]):
     plt.show()
 
 def outliers_plot(df: pd.DataFrame, colunas_num_continuas: list[str]):
+    """
+    Plota boxplots para identificar outliers em variáveis numéricas contínuas.
+
+    A função gera boxplots horizontais para cada variável contínua listada em `colunas_num_continuas` no DataFrame `df`. 
+    O gráfico de boxplot é uma forma eficiente de visualizar a distribuição das variáveis e identificar possíveis outliers.
+
+    Parâmetros:
+    -----------
+    df : pd.DataFrame
+        O DataFrame contendo as variáveis numéricas contínuas para as quais os boxplots serão gerados.
+    colunas_num_continuas : list of str
+        Lista contendo os nomes das colunas numéricas contínuas para as quais os boxplots serão plotados.
+
+    Retorna:
+    --------
+    None
+        A função gera e exibe os gráficos, mas não retorna nenhum valor.
+    """
+
     plt.figure(figsize = (10, 6))
     plt.suptitle('Boxplots ', fontsize=16)
 
@@ -128,6 +247,35 @@ def outliers_plot(df: pd.DataFrame, colunas_num_continuas: list[str]):
     plt.show()
 
 def cm_roc_recall_plot(model_name, model, X_train, X_test, y_train, y_test) -> None:
+    """
+    Avalia o desempenho de um modelo utilizando várias métricas e exibe gráficos de avaliação.
+
+    A função treina um modelo, faz previsões no conjunto de teste e exibe várias métricas de avaliação do modelo, incluindo:
+    - Relatório de classificação (precision, recall, f1-score).
+    - ROC-AUC score (Área sob a Curva ROC).
+    - Matrizes de Confusão, Curvas ROC-AUC e Curvas Precision-Recall.
+
+    Parâmetros:
+    -----------
+    model : estimator object
+        O modelo a ser treinado e avaliado. Este deve ser um modelo de aprendizado supervisionado com métodos `fit` e `predict`.
+    model_name : str
+        O nome do modelo para exibição no título e nos logs.
+    X_train : pd.DataFrame
+        O conjunto de dados de treinamento (características).
+    X_test : pd.DataFrame
+        O conjunto de dados de teste (características).
+    y_train : pd.Series
+        As labels (variáveis alvo) do conjunto de treinamento.
+    y_test : pd.Series
+        As labels (variáveis alvo) do conjunto de teste.
+
+    Retorna:
+    --------
+    None
+        A função gera e exibe os gráficos e as métricas de avaliação, mas não retorna nenhum valor.
+    """
+
     paleta = sns.color_palette(PALETTE)
 
     pipeline = Pipeline(steps=[
@@ -174,6 +322,43 @@ def cm_roc_recall_plot(model_name, model, X_train, X_test, y_train, y_test) -> N
     plt.show()
 
 def model_metrics(models: dict, X_train, X_test, y_train, y_test) -> pd.DataFrame:
+    """
+    Avalia as métricas de desempenho de múltiplos modelos e retorna um resumo das métricas em um DataFrame.
+
+    A função treina cada modelo fornecido no dicionário `models`, realiza previsões no conjunto de teste e calcula as seguintes métricas de desempenho:
+    - Precisão (Precision)
+    - Acurácia (Accuracy)
+    - Recall
+    - F1-Score ponderado (Weighted F1-Score)
+    - F1-Score macro (Macro Avg F1-Score)
+
+    O resumo das métricas é armazenado em um DataFrame, onde cada linha corresponde a um modelo e suas respectivas métricas.
+
+    Parâmetros:
+    -----------
+    models : dict
+        Dicionário onde as chaves são os nomes dos modelos (strings) e os valores são os modelos de aprendizado supervisionado a serem avaliados.
+    X_train : pd.DataFrame
+        O conjunto de dados de treinamento (características).
+    X_test : pd.DataFrame
+        O conjunto de dados de teste (características).
+    y_train : pd.Series
+        As labels (variáveis alvo) do conjunto de treinamento.
+    y_test : pd.Series
+        As labels (variáveis alvo) do conjunto de teste.
+
+    Retorna:
+    --------
+    pd.DataFrame
+        Um DataFrame contendo as métricas de desempenho para cada modelo, com as colunas:
+        - Modelo: nome do modelo.
+        - Precisão: Precision do modelo.
+        - Acurácia: Accuracy do modelo.
+        - Recall: Recall do modelo.
+        - f1-score (weighted): F1-Score ponderado do modelo.
+        - f1-score (macro avg): F1-Score macro médio do modelo.
+    """
+    
     resumo_metricas = []
 
     for model_name, model in models.items():
